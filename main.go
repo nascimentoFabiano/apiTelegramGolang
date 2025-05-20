@@ -38,6 +38,7 @@ func getMoedaUSD() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("erro ao fazer requisição: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	// Lendo o corpo da resposta
@@ -103,7 +104,7 @@ func main() {
 	})
 
 	// b.Handle(&btnEuro, func(c telebot.Context) error {
-	// 	// cotacoes, err := buscarCotacaoAwesomeAPI()
+	// 	// cotacoes, err := buscaEuro()
 	// 	// if err != nil {
 	// 	// 	// Se der erro, exibe a mensagem de erro
 	// 	// 	fmt.Println("Erro ao obter cotação do Euro:", err)
