@@ -13,6 +13,11 @@ import (
 	telebot "gopkg.in/telebot.v4"
 )
 
+/*
+Aplicação apenas para teste, por isso mantido tudo em um arquivo... Por isso não tem nenhum controller criado,
+assim que projeto evoluir adaptar!
+*/
+
 type CurrencyResponseDolar struct {
 	USDBRL struct {
 		Code       string `json:"code"`
@@ -29,11 +34,25 @@ type CurrencyResponseDolar struct {
 	} `json:"USDBRL"`
 }
 
-func getMoedaUSD() (string, error) {
+type CurrencyResponseEuro struct {
+	EURBRL struct {
+		Code       string `json:"code"`
+		Codein     string `json:"codein"`
+		Name       string `json:"name"`
+		High       string `json:"high"`
+		Low        string `json:"low"`
+		VarBid     string `json:"varBid"`
+		PctChange  string `json:"pctChange"`
+		Bid        string `json:"bid"`
+		Ask        string `json:"ask"`
+		Timestamp  string `json:"timestamp"`
+		CreateDate string `json:"create_date"`
+	} `json:"EURBRL"`
+}
 
-	url := "https://economia.awesomeapi.com.br/json/last/USD-BRL"
+func getMoedaEUR() (string, error) {
+	url := "https://economia.awesomeapi.com.br/json/last/EUR-BRL"
 
-	// Fazendo a requisição GET
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("erro ao fazer requisição: %w", err)
@@ -41,13 +60,36 @@ func getMoedaUSD() (string, error) {
 
 	defer resp.Body.Close()
 
-	// Lendo o corpo da resposta
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("erro ao ler resposta: %w", err)
 	}
 
-	// Parse do JSON
+	var data CurrencyResponseEuro
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", fmt.Errorf("erro ao parsear JSON: %w", err)
+	}
+
+	return data.EURBRL.High, nil
+
+}
+
+func getMoedaUSD() (string, error) {
+
+	url := "https://economia.awesomeapi.com.br/json/last/USD-BRL"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", fmt.Errorf("erro ao fazer requisição: %w", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("erro ao ler resposta: %w", err)
+	}
+
 	var data CurrencyResponseDolar
 	if err := json.Unmarshal(body, &data); err != nil {
 		return "", fmt.Errorf("erro ao parsear JSON: %w", err)
@@ -87,7 +129,7 @@ func main() {
 	)
 
 	b.Handle("/start", func(c telebot.Context) error {
-		return c.Send("Oooooo meu amiguinho, qual caô de hoje irmao?")
+		return c.Send("Oooooo meu amiguinho")
 	})
 
 	b.Handle("/cotacoes", func(c telebot.Context) error {
@@ -103,16 +145,14 @@ func main() {
 		return c.Send(fmt.Sprintf("Cotação do Dólar: R$ %s", high))
 	})
 
-	// b.Handle(&btnEuro, func(c telebot.Context) error {
-	// 	// cotacoes, err := buscaEuro()
-	// 	// if err != nil {
-	// 	// 	// Se der erro, exibe a mensagem de erro
-	// 	// 	fmt.Println("Erro ao obter cotação do Euro:", err)
-	// 	// 	return c.Send("Erro ao obter cotação do Euro.")
-	// 	// }
-	// 	// // Exibe a cotação do Euro (Bid)
-	// 	// return c.Send(fmt.Sprintf("Cotação do Euro: R$ %s", cotacoes.EuroBRL.Bid))
-	// })
+	b.Handle(&btnEuro, func(c telebot.Context) error {
+		high, err := getMoedaEUR()
+		if err != nil {
+			return c.Send("Erro ao obter cotação do EURO: ", err)
+		}
+
+		return c.Send(fmt.Sprintf("Cotação do Euro: R$ %s", high))
+	})
 
 	log.Print("Aplicação inciando!")
 	b.Start()
